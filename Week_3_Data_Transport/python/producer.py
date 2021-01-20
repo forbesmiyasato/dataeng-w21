@@ -65,9 +65,9 @@ if __name__ == '__main__':
                   .format(msg.topic(), msg.partition(), msg.offset()))
     with open('bcsample.json') as file:
         data = json.load(file)
-    	for n in data:
-            record_key = data['VEHICLE_ID']
-            record_value = data['VELOCITY']
+        for n in data:
+            record_key = n['VEHICLE_ID']
+            record_value = n['VELOCITY']
             print("Producing record: {}\t{}".format(record_key, record_value))
             producer.produce(topic, key=record_key, value=record_value, on_delivery=acked)
             # p.poll() serves delivery reports (on_delivery)

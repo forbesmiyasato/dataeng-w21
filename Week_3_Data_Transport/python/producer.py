@@ -65,7 +65,7 @@ if __name__ == '__main__':
                   .format(msg.topic(), msg.partition(), msg.offset()))
     with open('bcsample.json') as file:
         data = json.load(file)
-	print(type(data))
+        print(type(data))
     for n in range(10):
         record_key = "alice"
         record_value = json.dumps({'count': n})

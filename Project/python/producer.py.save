@@ -26,7 +26,6 @@ from confluent_kafka import Producer, KafkaError
 import json
 import ccloud_lib
 from urllib.request import urlopen
-from datetime import date
 
 if __name__ == '__main__':
 
@@ -35,7 +34,6 @@ if __name__ == '__main__':
     config_file = args.config_file
     topic = args.topic
     conf = ccloud_lib.read_ccloud_config(config_file)
-    today = date.today()
 
     # Create Producer instance
     producer = Producer({
@@ -63,8 +61,8 @@ if __name__ == '__main__':
             print("Failed to deliver message: {}".format(err))
         else:
             delivered_records += 1
-            # print("Produced record to topic {} partition [{}] @ offset {}"
-            #      .format(msg.topic(), msg.partition(), msg.offset()))
+            print("Produced record to topic {} partition [{}] @ offset {}"
+                  .format(msg.topic(), msg.partition(), msg.offset()))
 
     url = "http://rbi.ddns.net/getBreadCrumbData"
 
@@ -74,12 +72,6 @@ if __name__ == '__main__':
 
     data = json.loads(string)
 
-    date_time = today.strftime("%b_%d_%Y")
-    file_name = '/home/miyasato/nums_' + date_time + '.json'
-
-    count = 0
-    with open(file_name, 'w') as file:
-        json.dump(len(data), file)
     for element in data:
         record_event_no_trip = element['EVENT_NO_TRIP']
         record_event_no_stop = element['EVENT_NO_STOP']
@@ -95,18 +87,13 @@ if __name__ == '__main__':
         record_gps_satellites = element['GPS_SATELLITES']
         record_gps_hdop = element['GPS_HDOP']
         record_schedule_deviation = element['SCHEDULE_DEVIATION']
+        print("Producing record: {}\t{}\t{}\t{}\t{}\t{}".format(record_event_no_trip, record_event_no_stop, record_opd_date))
 
-        producer.produce(topic, value=json.dumps(element), on_delivery=acked)
-
+        producer.produce(topic, key=record_key, value=record_value, on_delivery=acked)
         # p.poll() serves delivery reports (on_delivery)
         # from previous produce() calls.
         producer.poll(0)
-        if count % 10000 == 0:
-            producer.flush()
-        count+=1
 
     producer.flush()
 
-    txt = "\n{} messages were produced to topic {}!".format(delivered_records, topic)
-    with open(file_name, 'a') as file:
-        file.write(txt)
+    print("{} messages were produced to topic {}!".format(delivered_records, topic))

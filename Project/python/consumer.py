@@ -25,7 +25,7 @@
 from confluent_kafka import Consumer
 import json
 import ccloud_lib
-
+from datetime import date
 
 if __name__ == '__main__':
 
@@ -34,6 +34,7 @@ if __name__ == '__main__':
     config_file = args.config_file
     topic = args.topic
     conf = ccloud_lib.read_ccloud_config(config_file)
+    today = date.today()
 
     # Create Consumer instance
     # 'auto.offset.reset=earliest' to start reading from the beginning of the
@@ -69,7 +70,9 @@ if __name__ == '__main__':
                 # Check for Kafka message
                 record_value = msg.value()
                 data = json.loads(record_value)
-                with open('/home/miyasato/bread_crumb_data.json', 'a') as file:
+                date_time = today.strftime("%b_%d_%Y")
+                file_name = '/home/miyasato/bread_crumb_data_' + date_time + '.json'
+                with open(file_name, 'a') as file:
                     json.dump(data, file)
                 # count = data['count']
                 # total_count += count

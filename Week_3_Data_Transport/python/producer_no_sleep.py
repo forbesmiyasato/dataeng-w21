@@ -73,7 +73,6 @@ if __name__ == '__main__':
             producer.produce(topic, key=record_key, value=record_value, on_delivery=acked)
             # p.poll() serves delivery reports (on_delivery)
             # from previous produce() calls.
-            sleep(0.25)
             producer.poll(0)
 
     producer.flush()

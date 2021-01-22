@@ -64,6 +64,8 @@ if __name__ == '__main__':
             delivered_records += 1
             print("Produced record to topic {} partition [{}] @ offset {}"
                   .format(msg.topic(), msg.partition(), msg.offset()))
+
+    i = 0
     with open('bcsample.json') as file:
         data = json.load(file)
         for n in data:
@@ -73,9 +75,11 @@ if __name__ == '__main__':
             producer.produce(topic, key=record_key, value=record_value, on_delivery=acked)
             # p.poll() serves delivery reports (on_delivery)
             # from previous produce() calls.
-            sleep(0.25)
             producer.poll(0)
-
-    producer.flush()
+            if i % 5 == 0:
+                sleep(2)
+            elif i % 15 == 0:
+                producer.flush()
+            i+=1
 
     print("{} messages were produced to topic {}!".format(delivered_records, topic))

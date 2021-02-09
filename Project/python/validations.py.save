@@ -1,0 +1,70 @@
+import datetime
+
+test = {"EVENT_NO_TRIP": "168733674", "EVENT_NO_STOP": "168733676", "OPD_DATE": "24-SEP-20", 
+"VEHICLE_ID": "4036", "METERS": "75843", "ACT_TIME": "34217", "VELOCITY": "5", "DIRECTION": "80", 
+"RADIO_QUALITY": "", "GPS_LONGITUDE": "-122.661302", "GPS_LATITUDE": "45.630505", "GPS_SATELLITES": "9", 
+"GPS_HDOP": "0.8", "SCHEDULE_DEVIATION": "99"}
+
+def validateVelocity(data):
+    key = 'VELOCITY'
+    if key not in data:
+        print("Velocity doesn't exist in data!")
+        return
+
+    velocity = int(data[key])
+    assert 0 <= velocity <= 50, "Vehicle has an abnormal speed of {}".format(velocity)
+
+def validateLatitude(data):
+    key = 'GPS_LATITUDE'
+    if key not in data:
+        print("Latitude doesn't exist in data!")
+        return
+
+    latitude = float(data[key])
+    latitudeOfPortland = 45.5051
+    errorRange = 10
+
+    assert latitudeOfPortland - errorRange < latitude < latitudeOfPortland + errorRange, "Vehicle has an abnormal latitude of {}".format(latitude)
+
+def validateLongitude(data):
+    key = 'GPS_LONGITUDE'
+    if key not in data:
+        print("Longitude doesn't exist in data!")
+        return
+
+    longitude = float(data[key])
+    longitudeOfPortland = -122.6750
+    errorRange = 10
+    assert longitudeOfPortland - errorRange < longitude < longitudeOfPortland + errorRange, "Vehicle has an abnormal longitude of {}".format(longitude)
+
+def validateOperationDay(data):
+    key = "OPD_DATE"
+    if key not in data:
+        print("Operation day doesn't exist in data!")
+        return
+
+    date = data[key].split("-")
+    day = int(date[0])
+    year = int(date[2])
+    months = {"JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5, "JUN": 6, "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12}
+    month = months[date[1]]
+    try:
+        newDate = datetime.datetime(year, month, day)
+    except ValueError:
+        print("Vehicle has an invalid date: day - {}, month - {}, year - {}".format(day, month, year))
+
+def validateDirection(data):
+    key = "DIRECTION"
+    if key not in data:
+        print("DIRECTION doesn't exist in data!")
+        return
+
+    direction = int(data[key])
+    assert 0 <= direction <= 360, "Vehicle has an abnormal direction of {}!".format(direction)
+
+def validate
+validateDirection(test)
+validateVelocity(test)
+validateLatitude(test)
+validateLongitude(test)
+validateOperationDay(test)

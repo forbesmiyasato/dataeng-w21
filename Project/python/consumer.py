@@ -70,6 +70,7 @@ if __name__ == '__main__':
                 # Check for Kafka message
                 record_value = msg.value()
                 data = json.loads(record_value)
+               
                 date_time = today.strftime("%b_%d_%Y")
                 file_name = '/home/miyasato/bread_crumb_data_' + date_time + '.json'
                 with open(file_name, 'a') as file:

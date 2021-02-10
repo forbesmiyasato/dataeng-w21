@@ -10,7 +10,7 @@ import csv
 DBname = "data_storage"
 DBuser = "forbes"
 DBpwd = "Forbesforbes11"
-TableName = 'CensusData'
+TableName = 'CensusDataTemp'
 Datafile = ""  # name of the data file to be loaded
 CreateDB = False  # indicates whether the DB table should be (re)-created
 Year = 2015
@@ -24,7 +24,7 @@ def row2vals(row):
 
 	ret = f"""
        {Year},                          -- Year
-       {row['CensusTract']},            -- CensusTract
+       {row['TractId']},            -- CensusTract
        '{row['State']}',                -- State
        '{row['County']}',               -- County
        {row['TotalPop']},               -- TotalPop
@@ -36,7 +36,7 @@ def row2vals(row):
        {row['Native']},                 -- Native
        {row['Asian']},                  -- Asian
        {row['Pacific']},                -- Pacific
-       {row['Citizen']},                -- Citizen
+       {row['VotingAgeCitizen']},                -- Citizen
        {row['Income']},                 -- Income
        {row['IncomeErr']},              -- IncomeErr
        {row['IncomePerCap']},           -- IncomePerCap
@@ -122,7 +122,7 @@ def createTable(conn):
 	with conn.cursor() as cursor:
 		cursor.execute(f"""
         	DROP TABLE IF EXISTS {TableName};
-        	CREATE TABLE {TableName} (
+        	CREATE TEMP TABLE {TableName} (
             	Year                INTEGER,
               CensusTract         NUMERIC,
             	State               TEXT,
@@ -161,9 +161,7 @@ def createTable(conn):
             	SelfEmployed        DECIMAL,
             	FamilyWork          DECIMAL,
             	Unemployment        DECIMAL
-         	);	
-         	ALTER TABLE {TableName} ADD PRIMARY KEY (Year, CensusTract);
-         	CREATE INDEX idx_{TableName}_State ON {TableName}(State);
+         	);
     	""")
 
 		print(f"Created {TableName}")
@@ -178,8 +176,8 @@ def load(conn, icmdlist):
 			# print (cmd)
 			cursor.execute(cmd)
 
-		elapsed = time.perf_counter() - start
-		print(f'Finished Loading. Elapsed Time: {elapsed:0.4} seconds')
+		# elapsed = time.perf_counter() - start
+		# print(f'Finished Loading. Elapsed Time: {elapsed:0.4} seconds')
 
 
 def main():
@@ -191,9 +189,15 @@ def main():
     if CreateDB:
     	createTable(conn)
 
+    start = time.perf_counter()
     load(conn, cmdlist)
-
-
+    with conn.cursor() as cursor:
+        cursor.execute(f"""
+		CREATE TABLE CensusData
+		AS TABLE CensusDataTemp
+    """)
+    elapsed = time.perf_counter() - start
+    print(f'Finished Loading. Elapsed Time: {elapsed:0.4} seconds')
 if __name__ == "__main__":
     main()
 

@@ -10,7 +10,7 @@ import csv
 DBname = "data_storage"
 DBuser = "forbes"
 DBpwd = "Forbesforbes11"
-TableName = 'CensusData'
+TableName = 'CensusData2'
 Datafile = ""  # name of the data file to be loaded
 CreateDB = False  # indicates whether the DB table should be (re)-created
 Year = 2015
@@ -24,7 +24,7 @@ def row2vals(row):
 
 	ret = f"""
        {Year},                          -- Year
-       {row['CensusTract']},            -- CensusTract
+       {row['TractId']},            -- CensusTract
        '{row['State']}',                -- State
        '{row['County']}',               -- County
        {row['TotalPop']},               -- TotalPop
@@ -36,7 +36,7 @@ def row2vals(row):
        {row['Native']},                 -- Native
        {row['Asian']},                  -- Asian
        {row['Pacific']},                -- Pacific
-       {row['Citizen']},                -- Citizen
+       {row['VotingAgeCitizen']},                -- Citizen
        {row['Income']},                 -- Income
        {row['IncomeErr']},              -- IncomeErr
        {row['IncomePerCap']},           -- IncomePerCap
@@ -112,7 +112,7 @@ def dbconnect():
         user=DBuser,
         password=DBpwd,
 	)
-	connection.autocommit = True
+	connection.autocommit = False
 	return connection
 
 # create the target table 
@@ -122,7 +122,7 @@ def createTable(conn):
 	with conn.cursor() as cursor:
 		cursor.execute(f"""
         	DROP TABLE IF EXISTS {TableName};
-        	CREATE TABLE {TableName} (
+        	CREATE UNLOGGED TABLE {TableName} (
             	Year                INTEGER,
               CensusTract         NUMERIC,
             	State               TEXT,
@@ -161,9 +161,7 @@ def createTable(conn):
             	SelfEmployed        DECIMAL,
             	FamilyWork          DECIMAL,
             	Unemployment        DECIMAL
-         	);	
-         	ALTER TABLE {TableName} ADD PRIMARY KEY (Year, CensusTract);
-         	CREATE INDEX idx_{TableName}_State ON {TableName}(State);
+         	);
     	""")
 
 		print(f"Created {TableName}")
@@ -192,7 +190,8 @@ def main():
     	createTable(conn)
 
     load(conn, cmdlist)
-
+    conn.commit()
+    conn.close()
 
 if __name__ == "__main__":
     main()

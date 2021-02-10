@@ -24,7 +24,7 @@ def row2vals(row):
 
 	ret = f"""
        {Year},                          -- Year
-       {row['CensusTract']},            -- CensusTract
+       {row['TractId']},            -- CensusTract
        '{row['State']}',                -- State
        '{row['County']}',               -- County
        {row['TotalPop']},               -- TotalPop
@@ -36,7 +36,7 @@ def row2vals(row):
        {row['Native']},                 -- Native
        {row['Asian']},                  -- Asian
        {row['Pacific']},                -- Pacific
-       {row['Citizen']},                -- Citizen
+       {row['VotingAgeCitizen']},                -- Citizen
        {row['Income']},                 -- Income
        {row['IncomeErr']},              -- IncomeErr
        {row['IncomePerCap']},           -- IncomePerCap

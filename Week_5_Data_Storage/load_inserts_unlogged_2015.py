@@ -9,7 +9,7 @@ import csv
 
 DBname = "data_storage"
 DBuser = "forbes"
-DBpwd = "Forbesforbes11"
+DBpwd = "forbes"
 TableName = 'CensusData2'
 Datafile = ""  # name of the data file to be loaded
 CreateDB = False  # indicates whether the DB table should be (re)-created

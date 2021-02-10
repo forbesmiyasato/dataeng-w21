@@ -85,7 +85,7 @@ class Validations:
         month = months[date[1]]
         newDate = None
         try:
-            newDate = datetime.datetime(year, month, day, 0, 0, 0)
+            newDate = datetime.datetime(2000 + year, month, day, 0, 0, 0)
         except ValueError:
             print("The record has an invalid date: day - {}, month - {}, year - {}".format(day, month, year))
             return False

@@ -30,7 +30,7 @@ import datetime
 import psycopg2
 
 DBhost = "34.105.43.104"
-DBname = "breadcrumb"
+DBname = "postgres"
 DBuser = "forbes"
 DBpwd = "forbes"
 TableTrip = "Trip"
@@ -39,7 +39,7 @@ TableBreadcrumb = "BreadCrumb"
 def getBreadcrumbVal(act_time, opd, lat, long, dir, speed, trip_id):
     tstamp = opd + datetime.timedelta(seconds=act_time)
     val = f"""
-    {tstamp},
+    '{tstamp}',
     {lat},
     {long},
     {dir},
@@ -56,8 +56,8 @@ def getTripVal(trip_id, route_id, vehicle_id, service_key, dir):
     {trip_id},
     {route_id},
     {vehicle_id},
-    {service_key},
-    {dir}
+    '{service_key}',
+    '{dir}'
     """
 
     return val
@@ -137,10 +137,12 @@ if __name__ == '__main__':
                     continue
 
                 breadcrumb_val = getBreadcrumbVal(act_time, opd, lat, long, dir, velocity, tID)
-                trip_val = getTripVal(tID, None, vID, None, None)
+                trip_val = getTripVal(tID, 0, vID, 'Weekday', 'Out')
 
                 bc_cmd = f"INSERT INTO {TableBreadcrumb} VALUES ({breadcrumb_val});"
                 trip_cmd = f"INSERT INTO {TableTrip} VALUES ({trip_val});"
+
+                # print(trip_cmd)
 
                 with conn.cursor() as cursor:
                     cursor.execute(trip_cmd)

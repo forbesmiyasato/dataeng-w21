@@ -145,8 +145,11 @@ if __name__ == '__main__':
                 # print(trip_cmd)
 
                 with conn.cursor() as cursor:
-                    cursor.execute(trip_cmd)
-                    cursor.execute(bc_cmd)
+                    try:
+                        cursor.execute(trip_cmd)
+                        cursor.execute(bc_cmd)
+                    except psycopg2.Error:
+                        pass
 
     except KeyboardInterrupt:
         pass

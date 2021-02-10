@@ -21,7 +21,7 @@ class Validations:
 
         if (0 <= velocity <= 50) is False:
             print( "The record has an abnormal velocity of {}".format(velocity))
-        return float(velocity * 2.23694)
+        return True
 
     def validateLatitude(self, data):
         key = 'GPS_LATITUDE'
@@ -42,7 +42,7 @@ class Validations:
         if (latitudeOfPortland - errorRange < latitude < latitudeOfPortland + errorRange) is False:
             print("The record has an abnormal latitude of {}".format(latitude))
             return False
-        return latitude
+        return True
 
     def validateLongitude(self, data):
         key = 'GPS_LONGITUDE'
@@ -62,7 +62,7 @@ class Validations:
         if (longitudeOfPortland - errorRange < longitude < longitudeOfPortland + errorRange) is False:
             print("The record has an abnormal longitude of {}".format(longitude))
             return False
-        return longitude
+        return True
 
     def validateOperationDay(self, data):
         key = "OPD_DATE"
@@ -83,13 +83,12 @@ class Validations:
             return False
 
         month = months[date[1]]
-        newDate = None
         try:
-            newDate = datetime.datetime(year, month, day, 0, 0, 0)
+            newDate = datetime.datetime(year, month, day)
         except ValueError:
             print("The record has an invalid date: day - {}, month - {}, year - {}".format(day, month, year))
             return False
-        return newDate
+        return True
 
     def validateDirection(self, data):
         key = "DIRECTION"
@@ -106,7 +105,7 @@ class Validations:
         if (0 <= direction <= 360) is False:
             print("The record has an abnormal direction of {}!".format(direction))
             return False
-        return direction
+        return True
 
     def validateMeters(self, data):
         key = "METERS"
@@ -118,7 +117,7 @@ class Validations:
         if meters.isnumeric() is False:
             print("The record has an abornal meters of {}!".format(meters))
             return False
-        return meters
+        return True
 
     def validateRadioQuality(self, data):
         key = "RADIO_QUALITY"
@@ -147,7 +146,7 @@ class Validations:
         if hdop >= 20:
             print("The record has a poor HDOP value of {}!".format(hdop))
             return False
-        return hdop
+        return True
 
     def validateSatellites(self, data):
         key = "GPS_SATELLITES"
@@ -164,7 +163,7 @@ class Validations:
         if (0 < satellites < 50) is False:
             print("The record has an abnormal amount of satellites of {}!".format(satellites))
             return False
-        return satellites
+        return True
 
     def validateScheduleDeviation(self, data):
         key = "SCHEDULE_DEVIATION"
@@ -178,7 +177,7 @@ class Validations:
         except ValueError:
             print("The record has an abnormal schedule deviation of {}!".format(sd))
             return False
-        return sd
+        return True
 
     def validateActTime(self, data):
         key = "ACT_TIME"
@@ -196,7 +195,7 @@ class Validations:
         if 0 < act_time < 86400 is False:
             print("The record has an abnormal actual time of {}!".format(act_time))
             return False
-        return act_time
+        return True
 
     def validateVehicleID(self, data):
         key = "VEHICLE_ID"

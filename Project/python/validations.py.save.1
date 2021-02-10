@@ -1,0 +1,134 @@
+import datetime
+
+test = {"EVENT_NO_TRIP": "168733674", "EVENT_NO_STOP": "168733676", "OPD_DATE": "24-SEP-20", 
+"VEHICLE_ID": "4036", "METERS": "75843", "ACT_TIME": "34217", "VELOCITY": "5", "DIRECTION": "80", 
+"RADIO_QUALITY": "", "GPS_LONGITUDE": "-122.661302", "GPS_LATITUDE": "45.630505", "GPS_SATELLITES": "9", 
+"GPS_HDOP": "0.8", "SCHEDULE_DEVIATION": "99"}
+
+def validateVelocity(data):
+    key = 'VELOCITY'
+    if key not in data:
+        print("Velocity doesn't exist in data!")
+        return False
+
+    velocity = int(data[key])
+    if (0 <= velocity <= 50) is False:
+        print( "The record has an abnormal velocity of {}".format(velocity))
+    return True
+
+def validateLatitude(data):
+    key = 'GPS_LATITUDE'
+    if key not in data:
+        print("Latitude doesn't exist in data!")
+        return False
+
+    latitude = float(data[key])
+    latitudeOfPortland = 45.5051
+    errorRange = 10
+
+    if (latitudeOfPortland - errorRange < latitude < latitudeOfPortland + errorRange) if False:
+        print("The record has an abnormal latitude of {}".format(latitude))
+        return False
+    return True
+
+def validateLongitude(data):
+    key = 'GPS_LONGITUDE'
+    if key not in data:
+        print("Longitude doesn't exist in data!")
+        return False
+
+    longitude = float(data[key])
+    longitudeOfPortland = -122.6750
+    errorRange = 10
+    if (longitudeOfPortland - errorRange < longitude < longitudeOfPortland + errorRange) is False:
+        print("The record has an abnormal longitude of {}".format(longitude))
+        return False
+    return True
+
+def validateOperationDay(data):
+    key = "OPD_DATE"
+    if key not in data:
+        print("Operation day doesn't exist in data!")
+        return
+
+    date = data[key].split("-")
+    day = int(date[0])
+    year = int(date[2])
+    months = {"JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5, "JUN": 6, "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12}
+    month = months[date[1]]
+    try:
+        newDate = datetime.datetime(year, month, day)
+    except ValueError:
+        print("The record has an invalid date: day - {}, month - {}, year - {}".format(day, month, year))
+        return False
+    return True
+
+def validateDirection(data):
+    key = "DIRECTION"
+    if key not in data:
+        print("DIRECTION doesn't exist in data!")
+        return False
+
+    direction = int(data[key])
+    if (0 <= direction <= 360) is False:
+        print("The record has an abnormal direction of {}!".format(direction))
+        return False
+    return True
+
+def validateMeters(data):
+    key = "METERS"
+    if key not in data:
+        print("METERS doesn't exist in data!")
+        return False
+
+    meters = data[key]
+    if meters.isnumeric() is False:
+        print("The record has an abornal meters of {}!".format(meters))
+        return False
+    return True
+
+def validateRadioQuality(data):
+    key = "RADIO_QUALITY"
+    if key not in data:
+        print("Radio quality doesn't exist in data!")
+        return False
+
+    radio_quality = data[key]
+    if radio_quality.strip() != "":
+        print("The record has an abornal radio quality of {}!".format(radio_quality))
+        return False
+    return True
+
+def validateHDOP(data):
+    key = "GPS_HDOP"
+    if key not in data:
+        print("HDOP doesn't exist in data!")
+        return False
+
+    hdop = float(data[key])
+    if hdop >= 20:
+        print("The record has a poor HDOP value of {}!".format(hdop))
+        return False
+    return True
+
+def validateSatellites(data):
+    key = "GPS_SATELLITES"
+    if key not in data:
+        print("Satellites doesn't exist in data!")
+        return False
+
+    satellites = int(data[key])
+    if (0 < satellites < 50) is False:
+        print("The record has an abnormal amount of satellities of {}!".format(satellites)
+        return False
+if key not in data:
+        print("HDOP doesn't exist in data!")
+        return False 
+validateHDOP(test)
+validateRadioQuality(test)
+validateMeters(test)
+validateDirection(test)
+validateVelocity(test)
+validateLatitude(test)
+validateLongitude(test)
+validateOperationDay(test)

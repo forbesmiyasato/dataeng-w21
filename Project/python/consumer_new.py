@@ -29,12 +29,22 @@ import ccloud_lib
 import datetime
 import psycopg2
 
-DBhost = "34.105.43.104"
-DBname = "postgres"
-DBuser = "forbes"
-DBpwd = "forbes"
 TableTrip = "Trip"
 TableBreadcrumb = "BreadCrumb"
+DBConfig = "db.config"
+
+def read_db_config(config_file):
+    """Read db configurations"""
+
+    conf = {}
+    with open(config_file) as fh:
+        for line in fh:
+            line = line.strip()
+            if len(line) != 0:
+                parameter, value = line.strip().split('=', 1)
+                conf[parameter] = value.strip()
+
+    return conf
 
 def getBreadcrumbVal(act_time, opd, lat, long, dir, speed, trip_id):
     tstamp = opd + datetime.timedelta(seconds=act_time)
@@ -63,15 +73,16 @@ def getTripVal(trip_id, route_id, vehicle_id, service_key, dir):
     return val
 
 # connect to the database
-def dbconnect():
-	connection = psycopg2.connect(
-        host=DBhost,
-        database=DBname,
-        user=DBuser,
-        password=DBpwd,
-	)
-	connection.autocommit = True
-	return connection
+def dbconnect(conf):
+
+    connection = psycopg2.connect(
+        host=conf['DBhost'],
+        database=conf['DBname'],
+        user=conf['DBuser'],
+        password=conf['DBpwd'],
+        )
+    connection.autocommit = True
+    return connection
 
 if __name__ == '__main__':
 
@@ -80,8 +91,9 @@ if __name__ == '__main__':
     config_file = args.config_file
     topic = args.topic
     conf = ccloud_lib.read_ccloud_config(config_file)
+    db_conf = read_db_config(DBConfig)
     v = Validations()
-    conn = dbconnect()
+    conn = dbconnect(db_conf)
 
     # Create Consumer instance
     # 'auto.offset.reset=earliest' to start reading from the beginning of the

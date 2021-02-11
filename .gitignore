@@ -30,3 +30,5 @@ entries.db
 env/
 *.pyc
 __pycache__/
+
+db.config

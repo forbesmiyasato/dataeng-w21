@@ -3,17 +3,20 @@
 
 import time
 import psycopg2
+import psycopg2.extras
 import argparse
 import re
 import csv
+from typing import Iterator, Dict, Any
 
 DBname = "data_storage"
 DBuser = "forbes"
 DBpwd = "forbes"
-TableName = 'CensusDataTemp'
+TableName = 'CensusData'
 Datafile = ""  # name of the data file to be loaded
 CreateDB = False  # indicates whether the DB table should be (re)-created
 Year = 2015
+page_size = 1000
 
 def row2vals(row):
 	# handle the null vals
@@ -24,7 +27,7 @@ def row2vals(row):
 
 	ret = f"""
        {Year},                          -- Year
-       {row['TractId']},            -- CensusTract
+       {row['CensusTract']},            -- CensusTract
        '{row['State']}',                -- State
        '{row['County']}',               -- County
        {row['TotalPop']},               -- TotalPop
@@ -36,7 +39,7 @@ def row2vals(row):
        {row['Native']},                 -- Native
        {row['Asian']},                  -- Asian
        {row['Pacific']},                -- Pacific
-       {row['VotingAgeCitizen']},                -- Citizen
+       {row['Citizen']},                -- Citizen
        {row['Income']},                 -- Income
        {row['IncomeErr']},              -- IncomeErr
        {row['IncomePerCap']},           -- IncomePerCap
@@ -72,12 +75,15 @@ def initialize():
   parser.add_argument("-d", "--datafile", required=True)
   parser.add_argument("-c", "--createtable", action="store_true")
   parser.add_argument("-y", "--year", default=Year)
+  parser.add_argument("-p", "--page", default=page_size)
   args = parser.parse_args()
 
   global Datafile
   Datafile = args.datafile
   global CreateDB
   CreateDB = args.createtable
+  global PageSize
+  PageSize = int(args.page)
   Year = args.year
 
 # read the input data file into a list of row strings
@@ -122,9 +128,9 @@ def createTable(conn):
 	with conn.cursor() as cursor:
 		cursor.execute(f"""
         	DROP TABLE IF EXISTS {TableName};
-        	CREATE TEMP TABLE {TableName} (
+        	CREATE TABLE {TableName} (
             	Year                INTEGER,
-              CensusTract         NUMERIC,
+                CensusTract         NUMERIC,
             	State               TEXT,
             	County              TEXT,
             	TotalPop            INTEGER,
@@ -166,38 +172,76 @@ def createTable(conn):
 
 		print(f"Created {TableName}")
 
-def load(conn, icmdlist):
-
+def load(conn, list):
+	print(PageSize)
+	for row in list:
+		for key in row:
+                	if not row[key]:
+                        	row[key] = 0
+                	row['County'] = row['County'].replace('\'','')  # eliminate quotes within literals
 	with conn.cursor() as cursor:
-		print(f"Loading {len(icmdlist)} rows")
+		print(f"Loading {len(list)} rows")
 		start = time.perf_counter()
-    
-		for cmd in icmdlist:
-			# print (cmd)
-			cursor.execute(cmd)
 
-		# elapsed = time.perf_counter() - start
-		# print(f'Finished Loading. Elapsed Time: {elapsed:0.4} seconds')
+		psycopg2.extras.execute_batch(cursor, """
+                        INSERT INTO CensusData VALUES (
+                            2015,
+                            %(CensusTract)s,
+                            %(State)s,
+                            %(County)s,
+                            %(TotalPop)s,
+                            %(Men)s,
+                            %(Women)s,
+                            %(Hispanic)s,
+                            %(White)s,
+                            %(Black)s,
+                            %(Native)s,
+                            %(Asian)s,
+                            %(Pacific)s,
+                            %(Citizen)s,
+                            %(Income)s,
+                            %(IncomeErr)s,
+                            %(IncomePerCap)s,
+                            %(IncomePerCapErr)s,
+                            %(Poverty)s,
+                            %(ChildPoverty)s,
+                            %(Professional)s,
+                            %(Service)s,
+                            %(Office)s,
+                            %(Construction)s,
+                            %(Production)s,
+                            %(Drive)s,
+                            %(Carpool)s,
+                            %(Transit)s,
+                            %(Walk)s,
+                            %(OtherTransp)s,
+                            %(WorkAtHome)s,
+                            %(MeanCommute)s,
+                            %(Employed)s,
+                            %(PrivateWork)s,
+                            %(PublicWork)s,
+                            %(SelfEmployed)s,
+                            %(FamilyWork)s,
+                            %(Unemployment)s
+                        );
+                    """, list, page_size=PageSize)
+
+		elapsed = time.perf_counter() - start
+		print(f'Finished Loading. Elapsed Time: {elapsed:0.4} seconds')
 
 
 def main():
     initialize()
     conn = dbconnect()
     rlis = readdata(Datafile)
-    cmdlist = getSQLcmnds(rlis)
+    # cmdlist = getSQLcmnds(rlis)
 
     if CreateDB:
     	createTable(conn)
 
-    start = time.perf_counter()
-    load(conn, cmdlist)
-    with conn.cursor() as cursor:
-        cursor.execute(f"""
-		CREATE TABLE CensusData
-		AS TABLE CensusDataTemp
-    """)
-    elapsed = time.perf_counter() - start
-    print(f'Finished Loading. Elapsed Time: {elapsed:0.4} seconds')
+    load(conn, rlis)
+
+
 if __name__ == "__main__":
     main()
 

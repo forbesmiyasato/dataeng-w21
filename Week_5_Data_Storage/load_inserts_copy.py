@@ -1,6 +1,8 @@
 # this program loads Census ACS data using basic, slow INSERTs 
 # run it with -h to see the command line options
 
+import io
+import csv
 import time
 import psycopg2
 import argparse
@@ -14,55 +16,6 @@ TableName = 'CensusData'
 Datafile = ""  # name of the data file to be loaded
 CreateDB = False  # indicates whether the DB table should be (re)-created
 Year = 2015
-
-def row2vals(row):
-	# handle the null vals
-	for key in row:
-		if not row[key]:
-			row[key] = 0
-		row['County'] = row['County'].replace('\'','')  # eliminate quotes within literals
-
-	ret = f"""
-       {Year},                          -- Year
-       {row['TractId']},            -- CensusTract
-       '{row['State']}',                -- State
-       '{row['County']}',               -- County
-       {row['TotalPop']},               -- TotalPop
-       {row['Men']},                    -- Men
-       {row['Women']},                  -- Women
-       {row['Hispanic']},               -- Hispanic
-       {row['White']},                  -- White
-       {row['Black']},                  -- Black
-       {row['Native']},                 -- Native
-       {row['Asian']},                  -- Asian
-       {row['Pacific']},                -- Pacific
-       {row['VotingAgeCitizen']},                -- Citizen
-       {row['Income']},                 -- Income
-       {row['IncomeErr']},              -- IncomeErr
-       {row['IncomePerCap']},           -- IncomePerCap
-       {row['IncomePerCapErr']},        -- IncomePerCapErr
-       {row['Poverty']},                -- Poverty
-       {row['ChildPoverty']},           -- ChildPoverty
-       {row['Professional']},           -- Professional
-       {row['Service']},                -- Service
-       {row['Office']},                 -- Office
-       {row['Construction']},           -- Construction
-       {row['Production']},             -- Production
-       {row['Drive']},                  -- Drive
-       {row['Carpool']},                -- Carpool
-       {row['Transit']},                -- Transit
-       {row['Walk']},                   -- Walk
-       {row['OtherTransp']},            -- OtherTransp
-       {row['WorkAtHome']},             -- WorkAtHome
-       {row['MeanCommute']},            -- MeanCommute
-       {row['Employed']},               -- Employed
-       {row['PrivateWork']},            -- PrivateWork
-       {row['PublicWork']},             -- PublicWork
-       {row['SelfEmployed']},           -- SelfEmployed
-       {row['FamilyWork']},             -- FamilyWork
-       {row['Unemployment']}            -- Unemployment
-	"""
-	return ret
 
 
 def initialize():
@@ -79,30 +32,6 @@ def initialize():
   global CreateDB
   CreateDB = args.createtable
   Year = args.year
-
-# read the input data file into a list of row strings
-# skip the header row
-def readdata(fname):
-	print(f"readdata: reading from File: {fname}")
-	with open(fname, mode="r") as fil:
-		dr = csv.DictReader(fil)
-		headerRow = next(dr)
-		# print(f"Header: {headerRow}")
-
-		rowlist = []
-		for row in dr:
-			rowlist.append(row)
-
-	return rowlist
-
-# convert list of data rows into list of SQL 'INSERT INTO ...' commands
-def getSQLcmnds(rowlist):
-	cmdlist = []
-	for row in rowlist:
-		valstr = row2vals(row)
-		cmd = f"INSERT INTO {TableName} VALUES ({valstr});"
-		cmdlist.append(cmd)
-	return cmdlist
 
 # connect to the database
 def dbconnect():
@@ -168,30 +97,32 @@ def createTable(conn):
 
 		print(f"Created {TableName}")
 
-def load(conn, icmdlist):
+def load(conn):
 
-	with conn.cursor() as cursor:
-		print(f"Loading {len(icmdlist)} rows")
+	with open(Datafile) as csvFile, conn.cursor() as cursor:
+		csvFile.seek(0)
+		next(csvFile)
+		CSVdata = csv.reader(csvFile, delimiter=',')
+		length = len(list(CSVdata))
+		print(f"Loading {length} rows")
 		start = time.perf_counter()
-    
-		for cmd in icmdlist:
-			# print (cmd)
-			cursor.execute(cmd)
+		cursor.copy_from(csvFile, TableName, sep=',')
 
 		elapsed = time.perf_counter() - start
 		print(f'Finished Loading. Elapsed Time: {elapsed:0.4} seconds')
-
+		cursor.execute(f"SELECT count(*) FROM {TableName};")
+		print(cursor.fetchall())
+		cursor.execute(f"SELECT count(*) FROM CensusData2;")
+		print(cursor.fetchall())
 
 def main():
     initialize()
     conn = dbconnect()
-    rlis = readdata(Datafile)
-    cmdlist = getSQLcmnds(rlis)
 
     if CreateDB:
     	createTable(conn)
 
-    load(conn, cmdlist)
+    load(conn)
 
 
 if __name__ == "__main__":

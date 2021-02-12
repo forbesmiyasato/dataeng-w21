@@ -22,10 +22,67 @@
 #
 # =============================================================================
 
+from validations import Validations
 from confluent_kafka import Consumer
 import json
 import ccloud_lib
-from datetime import date
+import datetime
+import psycopg2
+
+TableTrip = "Trip"
+TableBreadcrumb = "BreadCrumb"
+DBConfig = "/home/miyasato/dataeng-w21/Project/python/db.config"
+
+def read_db_config(config_file):
+    """Read db configurations"""
+
+    conf = {}
+    with open(config_file) as fh:
+        for line in fh:
+            line = line.strip()
+            if len(line) != 0:
+                parameter, value = line.strip().split('=', 1)
+                conf[parameter] = value.strip()
+
+    return conf
+
+def getBreadcrumbVal(act_time, opd, lat, long, dir, speed, trip_id):
+    tstamp = opd + datetime.timedelta(seconds=act_time)
+    val = f"""
+    '{tstamp}',
+    {lat},
+    {long},
+    {dir},
+    {speed},
+    {trip_id}
+    """
+
+    return val
+
+
+def getTripVal(trip_id, route_id, vehicle_id, service_key, dir):
+
+    val = f"""
+    {trip_id},
+    {route_id},
+    {vehicle_id},
+    '{service_key}',
+    '{dir}'
+    """
+
+    return val
+
+# connect to the database
+def dbconnect(conf):
+
+    connection = psycopg2.connect(
+        host=conf['DBhost'],
+        database=conf['DBname'],
+        user=conf['DBuser'],
+        password=conf['DBpwd'],
+        )
+    connection.autocommit = True
+    return connection
 
 if __name__ == '__main__':
 
@@ -34,7 +91,9 @@ if __name__ == '__main__':
     config_file = args.config_file
     topic = args.topic
     conf = ccloud_lib.read_ccloud_config(config_file)
-    today = date.today()
+    db_conf = read_db_config(DBConfig)
+    v = Validations()
+    conn = dbconnect(db_conf)
 
     # Create Consumer instance
     # 'auto.offset.reset=earliest' to start reading from the beginning of the
@@ -70,19 +129,44 @@ if __name__ == '__main__':
                 # Check for Kafka message
                 record_value = msg.value()
                 data = json.loads(record_value)
-               
-                date_time = today.strftime("%b_%d_%Y")
-                file_name = '/home/miyasato/bread_crumb_data_' + date_time + '.json'
-                with open(file_name, 'a') as file:
-                    json.dump(data, file)
-                # count = data['count']
-                # total_count += count
-                # print("Consumed record with key {} and value {}, \
-                #       and updated total count to {}"
-                #       .format(record_key, record_value, total_count))
+                velocity = v.validateVelocity(data)
+                lat = v.validateLatitude(data)
+                long = v.validateLongitude(data)
+                opd = v.validateOperationDay(data)
+                dir = v.validateDirection(data)
+                meters = v.validateMeters(data)
+                rq = v.validateRadioQuality(data)
+                hdop = v.validateHDOP(data)
+                sat = v.validateSatellites(data)
+                stdev = v.validateScheduleDeviation(data)
+                act_time = v.validateActTime(data)
+                vID = v.validateVehicleID(data)
+                sID = v.validateStopID(data)
+                tID = v.validateTripID(data)
+
+                # discard rows with invalid fields
+                if act_time is False or opd is False or lat is False or long is False or dir is False or velocity is False or tID is False or vID is False:
+                    continue
+
+                breadcrumb_val = getBreadcrumbVal(act_time, opd, lat, long, dir, velocity, tID)
+                trip_val = getTripVal(tID, 0, vID, 'Weekday', 'Out')
+
+                bc_cmd = f"INSERT INTO {TableBreadcrumb} VALUES ({breadcrumb_val});"
+                trip_cmd = f"INSERT INTO {TableTrip} VALUES ({trip_val});"
+
+                # print(trip_cmd)
+
+                with conn.cursor() as cursor:
+                    try:
+                        cursor.execute(trip_cmd)
+                        cursor.execute(bc_cmd)
+                    except psycopg2.Error:
+                        pass
+
     except KeyboardInterrupt:
         pass
     finally:
         # Leave group and commit final offsets
         consumer.close()
+        conn.close()
 

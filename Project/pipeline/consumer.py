@@ -159,14 +159,15 @@ if __name__ == '__main__':
                 with conn.cursor() as cursor:
                     try:
                         cursor.execute(trip_cmd)
-                        cursor.execute(bc_cmd)
                     except psycopg2.Error:
                         pass
+
+                    cursor.execute(bc_cmd)
 
     except KeyboardInterrupt:
         pass
     finally:
         # Leave group and commit final offsets
         consumer.close()
-        conn.close()
+        # conn.close()
 

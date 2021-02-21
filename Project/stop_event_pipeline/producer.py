@@ -80,12 +80,10 @@ if __name__ == '__main__':
 
     trip_index = []
 
-    # date_time = today.strftime("%b_%d_%Y")
-    # file_name = '/home/miyasato/nums_' + date_time + '.json'
+    date_time = today.strftime("%b_%d_%Y")
+    file_name = '/home/miyasato/updates_' + date_time + '.json'
 
     count = 0
-    # with open(file_name, 'w') as file:
-        # json.dump(len(data), file)
 
     for trip in soup.find_all("h3"):
         text = trip.text
@@ -131,6 +129,6 @@ if __name__ == '__main__':
 
     producer.flush()
     print(f"Total of {count} stop event records inserted.")
-    # txt = "\n{} messages were produced to topic {}!".format(delivered_records, topic)
-    # with open(file_name, 'a') as file:
-        # file.write(txt)
+    txt = "\n{} stop events were produced to topic {}!".format(delivered_records, topic)
+    with open(file_name, 'a') as file:
+        file.write(txt)

@@ -21,7 +21,6 @@
 # Using Confluent Python Client for Apache Kafka
 #
 # =============================================================================
-
 from validations import Validations
 from confluent_kafka import Consumer
 import json
@@ -31,7 +30,7 @@ import psycopg2
 
 TableTrip = "Trip"
 TableBreadcrumb = "BreadCrumb"
-DBConfig = "/home/miyasato/dataeng-w21/Project/python/db.config"
+DBConfig = "/home/miyasato/dataeng-w21/Project/db.config"
 
 def read_db_config(config_file):
     """Read db configurations"""

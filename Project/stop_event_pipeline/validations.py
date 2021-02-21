@@ -25,6 +25,7 @@ def validateServiceKey(data):
 
     if service_key not in service_keys:
         print("The record has an invalid service key of {}.".format(service_key))
+        return False
 
     return service_keys[service_key]
 
@@ -36,11 +37,12 @@ def validateDirection(data):
         return False
 
     direction = data[key]
-
-    if direction is not ['0','1']:
+    directions = {'0': 'Out', '1': 'Back'}
+    if direction not in directions:
         print("The record has an invalid direction of {}.".format(direction))
+        return False
 
-    return direction
+    return directions[direction]
 
 def validateRouteId(data):
     key = 'route_number'

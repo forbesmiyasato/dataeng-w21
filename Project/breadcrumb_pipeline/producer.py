@@ -21,16 +21,11 @@
 # Using Confluent Python Client for Apache Kafka
 #
 # =============================================================================
-
-import sys
-sys.path.append("..")
 from confluent_kafka import Producer, KafkaError
 import json
 import ccloud_lib
 from urllib.request import urlopen
 from datetime import date
-from validations import *
-from bs4 import BeautifulSoup
 
 if __name__ == '__main__':
 
@@ -70,64 +65,47 @@ if __name__ == '__main__':
             # print("Produced record to topic {} partition [{}] @ offset {}"
             #      .format(msg.topic(), msg.partition(), msg.offset()))
 
-    url = "http://rbi.ddns.net/getStopEvents"
+    url = "http://rbi.ddns.net/getBreadCrumbData"
 
     html = urlopen(url)
 
-    soup = BeautifulSoup(html, 'lxml')
+    string = html.read().decode('utf-8')
 
-    table_data = []
+    data = json.loads(string)
 
-    trip_index = []
-
-    # date_time = today.strftime("%b_%d_%Y")
-    # file_name = '/home/miyasato/nums_' + date_time + '.json'
+    date_time = today.strftime("%b_%d_%Y")
+    file_name = '/home/miyasato/nums_' + date_time + '.json'
 
     count = 0
-    # with open(file_name, 'w') as file:
-        # json.dump(len(data), file)
+    with open(file_name, 'w') as file:
+        json.dump(len(data), file)
+    for element in data:
+        record_event_no_trip = element['EVENT_NO_TRIP']
+        record_event_no_stop = element['EVENT_NO_STOP']
+        record_opd_date = element['OPD_DATE']
+        record_vehicle_id = element['VEHICLE_ID']
+        record_meters = element['METERS']
+        record_act_time = element['ACT_TIME']
+        record_velocity = element['VELOCITY']
+        record_direction = element['DIRECTION']
+        record_radio_quality = element['RADIO_QUALITY']
+        record_gps_longitude = element['GPS_LONGITUDE']
+        record_gps_latitude = element['GPS_LATITUDE']
+        record_gps_satellites = element['GPS_SATELLITES']
+        record_gps_hdop = element['GPS_HDOP']
+        record_schedule_deviation = element['SCHEDULE_DEVIATION']
 
-    for trip in soup.find_all("h3"):
-        text = trip.text
-        start = text.index('trip') + 5
-        end = text.index('for today') - 1
-        id = text[start:end]
-        trip_index.append(id)
+        producer.produce(topic, value=json.dumps(element), on_delivery=acked)
 
-    for j, table in enumerate(soup.find_all("table")):
-        fields = []
-        for tr in table.find_all('tr', recursive=False):
-            for th in tr.find_all('th', recursive=False):
-                fields.append(th.text)
-
-        for tr in table.find_all('tr'):
-            data = {}
-            for i, td in enumerate(tr.find_all('td')):
-                data[fields[i]] = td.text
-            if data:
-                data["trip_id"] = trip_index[j]
-                trip_id = validateTripId(data)
-                route_id = validateRouteId(data)
-                direction = validateDirection(data)
-                service_key = validateServiceKey(data)
-
-                if trip_id is False or route_id is False or direction is False or service_key is False:
-                    continue
-
-                # send record to kafka
-                producer.produce(topic, value=json.dumps(data), on_delivery=acked)
-
-                # p.poll() serves delivery reports (on_delivery)
-                # from previous produce() calls.
-                producer.poll(0)
-                if count % 10000 == 0:
-                    producer.flush()
-                count+=1
-                break
-
+        # p.poll() serves delivery reports (on_delivery)
+        # from previous produce() calls.
+        producer.poll(0)
+        if count % 10000 == 0:
+            producer.flush()
+        count+=1
 
     producer.flush()
-    print(f"Total of {count} stop event records inserted.")
-    # txt = "\n{} messages were produced to topic {}!".format(delivered_records, topic)
-    # with open(file_name, 'a') as file:
-        # file.write(txt)
+
+    txt = "\n{} messages were produced to topic {}!".format(delivered_records, topic)
+    with open(file_name, 'a') as file:
+        file.write(txt)

@@ -21,8 +21,6 @@
 # Using Confluent Python Client for Apache Kafka
 #
 # =============================================================================
-import sys
-sys.path.append("..")
 from confluent_kafka import Consumer
 import json
 import ccloud_lib
@@ -72,7 +70,10 @@ if __name__ == '__main__':
                 record_value = msg.value()
                 data = json.loads(record_value)
                
-                print(data)
+                date_time = today.strftime("%b_%d_%Y")
+                file_name = '/home/miyasato/bread_crumb_data_' + date_time + '.json'
+                with open(file_name, 'a') as file:
+                    json.dump(data, file)
                 # count = data['count']
                 # total_count += count
                 # print("Consumed record with key {} and value {}, \

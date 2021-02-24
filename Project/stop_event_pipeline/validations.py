@@ -21,7 +21,7 @@ def validateServiceKey(data):
         return False
 
     service_key = data[key]
-    service_keys = {'W': 'Weekdays', 'S': 'Saturday', 'U': 'Sunday'}
+    service_keys = {'W': 'Weekday', 'S': 'Saturday', 'U': 'Sunday'}
 
     if service_key not in service_keys:
         print("The record has an invalid service key of {}.".format(service_key))

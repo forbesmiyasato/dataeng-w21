@@ -1,0 +1,1 @@
+select * from (select * from breadcrumb where date(tstamp) = '2020-10-11' and extract(hour from tstamp) between 9 and 10) as t1 inner join (select * from trip where route_id = 65 and direction = 'Out') as t2 on t1.trip_id = t2.trip_id order by tstamp;

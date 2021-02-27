@@ -1,0 +1,1 @@
+select * from breadcrumb inner join (select trip_id, max(latitude), min(latitude), max(longitude), min(longitude), sqrt(power(max(latitude) - min(latitude), 2) + power(max(longitude) - min(longitude),2)) as distance from breadcrumb group by trip_id order by distance desc limit 1) as t on breadcrumb.trip_id = t.trip_id;

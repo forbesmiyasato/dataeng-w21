@@ -15,7 +15,6 @@ with open(file_name, newline='') as csvfile:
     for line in data[1:]:
         row = re.split(r'\t+', line)
         # Uncomment these lines
-        print(len(row))
         if len(row) < 6:
             continue
         lat = row[1]
@@ -24,6 +23,7 @@ with open(file_name, newline='') as csvfile:
 
         # skip the rows where speed is missing
         if speed is None or speed == "":
+            print(speed)
             continue
      	
         try:

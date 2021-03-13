@@ -14,6 +14,7 @@ with open(file_name, newline='') as csvfile:
     data = csvfile.readlines()
     for line in data[1:]:
         row = re.split(r'\t+', line)
+        print(row)
         # Uncomment these lines
         if len(row) < 6:
             continue
